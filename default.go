@@ -3,28 +3,27 @@ package sat
 import (
 	"bufio"
 	"errors"
-	"io"
 	"os"
 	"path"
 	"runtime"
 	"sync"
 )
 
-type dict struct {
+type defaultDict struct {
 	mt          sync.RWMutex
 	data        map[rune]rune
 	dataReverse map[rune]rune
 	opts        Options
 }
 
-func (d *dict) set(on, under rune) {
+func (d *defaultDict) set(on, under rune) {
 	d.mt.Lock()
 	defer d.mt.Unlock()
 	d.data[on] = under
 	d.dataReverse[under] = on
 }
 
-func (d *dict) getData(char rune) rune {
+func (d *defaultDict) getData(char rune) rune {
 	d.mt.RLock()
 	defer d.mt.RUnlock()
 	if s, ok := d.data[char]; ok {
@@ -33,7 +32,7 @@ func (d *dict) getData(char rune) rune {
 	return char
 }
 
-func (d *dict) getDataR(char rune) rune {
+func (d *defaultDict) getDataR(char rune) rune {
 	d.mt.RLock()
 	defer d.mt.RUnlock()
 	if s, ok := d.dataReverse[char]; ok {
@@ -42,21 +41,62 @@ func (d *dict) getDataR(char rune) rune {
 	return char
 }
 
-func (d *dict) defaultIO() (io.Reader, error) {
+func (d *defaultDict) defaultFile() (*os.File, error) {
 	_, file, _, _ := runtime.Caller(1)
 	base := path.Dir(file) + "/dict.txt"
 	return os.Open(base)
 }
 
-func (d *dict) Load(reader io.Reader) error {
-	var err error
-	if reader == nil {
-		reader, err = d.defaultIO()
-		if err != nil {
-			return err
-		}
+func (d *defaultDict) Init(opts ...Option) error {
+	for _, o := range opts {
+		o(&d.opts)
 	}
-	buf := bufio.NewScanner(reader)
+	return nil
+}
+
+func read(s string, f func(char rune) rune) string {
+	r := []rune(s)
+	for i := 0; i < len(r); i++ {
+		r[i] = f(r[i]) //d.getData(r[i])
+	}
+	return string(r)
+}
+
+func (d *defaultDict) Read(s string) string {
+	return read(s, d.getData)
+}
+
+func (d *defaultDict) ReadReverse(s string) string {
+	return read(s, d.getDataR)
+}
+
+var d *defaultDict
+
+func DefaultDict() Dicter {
+	if d == nil {
+		InitDefaultDict()
+	}
+	return d
+}
+func InitDefaultDict(opts ...Option) error {
+	d = &defaultDict{
+		data:        make(map[rune]rune),
+		dataReverse: make(map[rune]rune),
+	}
+	d.Init(opts...)
+	var (
+		err  error
+		file *os.File
+	)
+	if d.opts.Path == "" {
+		file, err = d.defaultFile()
+	} else {
+		file, err = os.Open(d.opts.Path)
+	}
+	if err != nil {
+		return err
+	}
+	buf := bufio.NewScanner(file)
 	var simplified []rune
 	var traditional []rune
 	var i int
@@ -77,45 +117,4 @@ func (d *dict) Load(reader io.Reader) error {
 		d.set(traditional[i], simplified[i])
 	}
 	return nil
-}
-
-func read(s string, f func(char rune) rune) string {
-	r := []rune(s)
-	for i := 0; i < len(r); i++ {
-		r[i] = f(r[i]) //d.getData(r[i])
-	}
-	return string(r)
-}
-
-func (d *dict) Read(s string) string {
-	return read(s, d.getData)
-}
-
-func (d *dict) ReadReverse(s string) string {
-	return read(s, d.getDataR)
-}
-
-var defaultDict Dicter
-
-func DefaultDict(ops ...Option) Dicter {
-	if defaultDict != nil {
-		return defaultDict
-	}
-	d := &dict{
-		data:        make(map[rune]rune),
-		dataReverse: make(map[rune]rune),
-	}
-	var reader io.Reader
-	var err error
-	for _, op := range ops {
-		op(&d.opts)
-	}
-	if d.opts.Path != "" {
-		reader, err = os.Open(d.opts.Path)
-		if err != nil {
-			panic(err)
-		}
-	}
-	d.Load(reader)
-	return d
 }
