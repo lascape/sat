@@ -3,6 +3,7 @@ package sat
 import (
 	"bufio"
 	"errors"
+	"log"
 	"os"
 	"path"
 	"runtime"
@@ -74,7 +75,10 @@ var d *defaultDict
 
 func DefaultDict() Dicter {
 	if d == nil {
-		InitDefaultDict()
+		err := InitDefaultDict()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	return d
 }
