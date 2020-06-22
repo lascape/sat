@@ -10,3 +10,13 @@ dicter.ReadReverse("什么")
 ```go
 DefaultDict(SetPath("/users/go/src/xxx.txt"))
 ```
+
+## 性能测试
+```go
+goos: darwin
+goarch: amd64
+pkg: github.com/go-creed/sat
+BenchmarkNewDict
+BenchmarkNewDict-12    	14721091	        71.2 ns/op
+PASS
+```
