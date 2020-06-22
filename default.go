@@ -92,28 +92,30 @@ func InitDefaultDict(opts ...Option) error {
 		err  error
 		file *os.File
 	)
-	if d.opts.Path == "" {
-		file, err = d.defaultFile()
-	} else {
-		file, err = os.Open(d.opts.Path)
-	}
-	if err != nil {
-		return err
-	}
-	buf := bufio.NewScanner(file)
 	var simplified []rune
 	var traditional []rune
-	var i int
-	for buf.Scan() {
-		text := buf.Text()
-		switch i {
-		case 0:
-			simplified = []rune(text)
-		case 1:
-			traditional = []rune(text)
+	if d.opts.Path != "" {
+		file, err = os.Open(d.opts.Path)
+		if err != nil {
+			return err
 		}
-		i++
+		buf := bufio.NewScanner(file)
+		var i int
+		for buf.Scan() {
+			text := buf.Text()
+			switch i {
+			case 0:
+				simplified = []rune(text)
+			case 1:
+				traditional = []rune(text)
+			}
+			i++
+		}
+	} else {
+		simplified = defaultSimplified
+		traditional = defaultTraditional
 	}
+
 	if len(simplified) != len(traditional) {
 		return errors.New("the length of simplified varies from the length of traditional")
 	}
