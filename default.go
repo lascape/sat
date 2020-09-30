@@ -119,7 +119,7 @@ func InitDefaultDict(opts ...Option) error {
 	if len(simplified) != len(traditional) {
 		return errors.New("the length of simplified varies from the length of traditional")
 	}
-	for i := 0; i < len(simplified); i++ {
+	for i := 0; i < len(simplified) && i < len(traditional); i++ {
 		d.set(traditional[i], simplified[i])
 	}
 	return nil
