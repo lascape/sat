@@ -11,7 +11,7 @@ func TestDefaultDict_Init(t *testing.T) {
 		return
 	}
 	dicter := DefaultDict()
-	t.Log(dicter.ReadReverse("一"))
+	t.Log(dicter.ReadReverse("一繁"))
 	t.Log(dicter.Read("五"))
 }
 
