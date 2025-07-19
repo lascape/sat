@@ -1,3 +1,3 @@
-module github.com/go-creed/sat
+module github.com/lascape/sat
 
 go 1.14

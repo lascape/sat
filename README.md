@@ -15,7 +15,7 @@ DefaultDict(SetPath("/users/go/src/xxx.txt"))
 ```go
 goos: darwin
 goarch: amd64
-pkg: github.com/go-creed/sat
+pkg: github.com/lascape/sat
 BenchmarkNewDict
 BenchmarkNewDict-12    	14721091	        71.2 ns/op
 PASS
